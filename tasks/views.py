@@ -22,10 +22,10 @@ prefix_task = {
 prefix_tracker = {
     0: 'Task',
     1: 'Q&A',
-    2: 'Task code',
-    3: 'Task code',
-    4: 'Task review',
-    5: 'Task code',
+    2: 'Task',
+    3: 'Task',
+    4: 'Task',
+    5: 'Task',
     6: 'Task',
 }
 
