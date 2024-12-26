@@ -14,7 +14,7 @@ def create_initial_config(apps, schema_editor):
     prefix_tasks = {
         0: '[Study]',
         1: '[Q&A]',
-        2: '[Coding]',
+        2: '[Create]',
         3: '[UT]',
         4: '[Review]',
         5: '[Fix bug]',
