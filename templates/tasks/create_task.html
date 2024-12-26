@@ -1,0 +1,423 @@
+<!-- tasks/templates/tasks/create_task.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Tasks from Redmine</title>
+    <!-- Material Design CDN -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <style>
+        .task-info-card {
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .sub-tasks-table {
+            margin: 20px 0;
+        }
+        /* Add these styles for messages */
+        .messages {
+            margin: 20px 0;
+        }
+        .success {
+            background-color: #4CAF50 !important;
+        }
+        .error {
+            background-color: #F44336 !important;
+        }
+        .card {
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        .card-content {
+            padding: 24px;
+        }
+        .input-content {
+            margin-bottom: 50px;
+        }
+        .card-title {
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        table td {
+            padding: 10px 15px;
+        }
+        .input-field {
+            margin-bottom: 20px;
+        }
+        .messages {
+            margin: 20px 0;
+        }
+        .success {
+            background-color: #4CAF50 !important;
+        }
+        .error {
+            background-color: #F44336 !important;
+        }
+        .material-icons.tiny {
+            font-size: 16px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .card-content form {
+            margin: 0;
+            padding: 0;
+        }
+        .card-content .input-field {
+            margin-top: 1rem;
+        }
+        .card-content .btn {
+            margin-top: 1rem;
+        }
+        .margin-top {
+            margin-top: 50px !important;
+        }
+        .container {
+            width: 90% !important;
+            max-width: unset !important;
+        }
+        .browser-default {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            height: 32px;
+        }
+        
+        input[type="text"], input[type="number"], input[type="date"] {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            height: 32px;
+        }
+        
+        table td {
+            padding: 5px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="card-panel {{ message.tags }}">
+                <span class="white-text">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <!-- Cột bên trái - Form nhập thông tin -->
+            <div class="col s12 m6">
+                <div class="card">
+                    <div class="card-content input-content">
+                        <span class="card-title center-align">Nhập Thông Tin Redmine</span>
+                        <form method="post" class="col s12 margin-top">
+                            {% csrf_token %}
+                            <div class="input-field">
+                                {{ form.redmine_api_key }}
+                                <label for="{{ form.redmine_api_key.id_for_label }}">Redmine API Key</label>
+                            </div>
+                            <div class="input-field">
+                                {{ form.task_link }}
+                                <label for="{{ form.task_link.id_for_label }}">Link Task Redmine</label>
+                            </div>
+                            <div class="center-align">
+                                <button class="btn waves-effect waves-light" type="submit">
+                                    Lấy Thông Tin
+                                    <i class="material-icons right">send</i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột bên phải - Hiển thị thông tin task -->
+            <div class="col s12 m6">
+                {% if task_info %}
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title center-align">Thông tin Parent Task</span>
+                        <div class="row">
+                            <div class="col s12">
+                                <table class="striped">
+                                    <tbody>
+                                        <tr>
+                                            <td><i class="material-icons tiny">label</i> Tracker:</td>
+                                            <td>{{ task_info.tracker|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">title</i> Summary:</td>
+                                            <td>{{ task_info.summary|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">info</i> Status:</td>
+                                            <td>{{ task_info.status|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">priority_high</i> Priority:</td>
+                                            <td>{{ task_info.priority|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">person</i> Assignee:</td>
+                                            <td>{{ task_info.assignee|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">bookmark</i> Target Version:</td>
+                                            <td>{{ task_info.target_version|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">date_range</i> Start Date:</td>
+                                            <td>{{ task_info.start_date|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">event</i> Due Date:</td>
+                                            <td>{{ task_info.due_date|default:"-" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="material-icons tiny">schedule</i> Estimate Time:</td>
+                                            <td>{{ task_info.estimate_time|default:"-" }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if task_info %}
+        <!-- Phần danh sách sub-tasks -->
+        <div class="row">
+            <div class="col s12">
+                <h4 class="center-align">Danh sách 7 Sub-Tasks</h4>
+                <div class="sub-tasks-table">
+                    <table class="striped highlight responsive-table" id="sub-tasks-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <label>
+                                        <input type="checkbox" class="filled-in" id="select-all" checked />
+                                        <span></span>
+                                    </label>
+                                </th>
+                                <th>STT</th>
+                                <th>Summary</th>
+                                <th>Tracker</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Assignee</th>
+                                <th>Target Version</th>
+                                <th>Start Date</th>
+                                <th>Due Date</th>
+                                <th>Estimate Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub_task in sub_tasks %}
+                            <tr>
+                                <td>
+                                    <label>
+                                        <input type="checkbox" class="filled-in sub-task-checkbox" name="selected_tasks" value="{{ forloop.counter0 }}" {% if forloop.counter0 != 1 and forloop.counter0 != 5 %}checked{% endif %} />
+                                        <span></span>
+                                    </label>
+                                </td>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <input type="text" class="task-summary" value="{{ sub_task.summary }}" style="width: 285px;">
+                                </td>
+                                <td>
+                                    <select class="task-tracker browser-default">
+                                        {% for tracker in trackers %}
+                                        <option value="{{ tracker.id }}" {% if tracker.name == sub_task.tracker %}selected{% endif %}>
+                                            {{ tracker.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="task-status browser-default">
+                                        {% for status in statuses %}
+                                        <option value="{{ status.id }}" {% if status.name == sub_task.status %}selected{% endif %}>
+                                            {{ status.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="task-priority browser-default">
+                                        {% for priority in priorities %}
+                                        <option value="{{ priority.id }}" {% if priority.name == sub_task.priority %}selected{% endif %}>
+                                            {{ priority.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="task-assignee browser-default">
+                                        <option value="">Unassigned</option>
+                                        {% for member in members %}
+                                        <option value="{{ member.user.id }}" {% if member.user.name == sub_task.assignee %}selected{% endif %}>
+                                            {{ member.user.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="task-version browser-default">
+                                        <option value="">No Version</option>
+                                        {% for version in versions %}
+                                        <option value="{{ version.id }}" {% if version.name == sub_task.target_version %}selected{% endif %}>
+                                            {{ version.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="date" class="task-start-date" value="{{ sub_task.start_date }}"  onclick="this.showPicker()">
+                                </td>
+                                <td>
+                                    <input type="date" class="task-due-date" value="{{ sub_task.due_date }}"  onclick="this.showPicker()">
+                                </td>
+                                <td>
+                                    <input type="number" class="task-estimate" value="" step="0.5" min="0">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="center-align" style="margin-top: 20px;">
+                    <form method="post" action="{% url 'create_sub_tasks' %}" id="create-subtasks-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="selected_indices" id="selected-indices" value="">
+                        <button class="btn-large waves-effect waves-light" type="submit">
+                            Tạo Sub-Tasks
+                            <i class="material-icons right">add_circle</i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Material Design JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const subTaskCheckboxes = document.querySelectorAll('.sub-task-checkbox');
+            const form = document.getElementById('create-subtasks-form');
+            const selectedIndicesInput = document.getElementById('selected-indices');
+            const apiKeyInput = document.querySelector('[name="redmine_api_key"]');
+
+            // Tự động điền API key từ localStorage nếu có
+            const savedApiKey = localStorage.getItem('redmine_api_key');
+            if (savedApiKey && !apiKeyInput.value) {
+                apiKeyInput.value = savedApiKey;
+                apiKeyInput.classList.add('valid');
+                apiKeyInput.nextElementSibling.classList.add('active');
+            }
+
+            // Lưu API key vào localStorage khi form được submit
+            form.closest('form').addEventListener('submit', function() {
+                const apiKey = apiKeyInput.value;
+                if (apiKey) {
+                    localStorage.setItem('redmine_api_key', apiKey);
+                }
+            });
+
+            // Mặc định check tất cả ngoại trừ task thứ 2 và thứ 6
+            selectAllCheckbox.checked = false;
+            subTaskCheckboxes.forEach((checkbox, index) => {
+                checkbox.checked = !(index === 1); // Bỏ check index 1 và 5
+            });
+
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                subTaskCheckboxes.forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                });
+            });
+
+            subTaskCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allChecked = Array.from(subTaskCheckboxes).every(cb => cb.checked);
+                    selectAllCheckbox.checked = allChecked;
+                });
+            });
+
+            // Hàm cập nhật dữ liệu sub-task khi có thay đổi
+
+
+            // Cập nhật dữ liệu khi submit form
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Lấy danh sách các task được chọn
+                const selectedIndices = Array.from(subTaskCheckboxes)
+                    .map((checkbox, index) => checkbox.checked ? index : null)
+                    .filter(index => index !== null);
+                
+                if (selectedIndices.length === 0) {
+                    alert('Vui lòng chọn ít nhất một sub-task để tạo.');
+                    return;
+                }
+
+                // Lấy thông tin của tất cả sub-tasks
+                const allSubTasks = [];
+                document.querySelectorAll('#sub-tasks-table tbody tr').forEach((row, index) => {
+                    try {
+                        const checkbox = row.querySelector('.sub-task-checkbox');
+                        if (checkbox && checkbox.checked) { // Chỉ lấy thông tin từ hàng có checkbox được chọn
+                            const subTask = {
+                                summary: row.querySelector('.task-summary').value,
+                                tracker: row.querySelector('.task-tracker option:checked').text,
+                                tracker_id: row.querySelector('.task-tracker option:checked').value, // Thêm tracker_id
+                                status: row.querySelector('.task-status option:checked').text,
+                                status_id: row.querySelector('.task-status option:checked').value, // Thêm status_id
+                                priority: row.querySelector('.task-priority option:checked').text,
+                                priority_id: row.querySelector('.task-priority option:checked').value, // Thêm priority_id
+                                assignee: row.querySelector('.task-assignee option:checked').text,
+                                assignee_id: row.querySelector('.task-assignee option:checked').value, // Thêm member_id
+                                target_version: row.querySelector('.task-version option:checked').text,
+                                start_date: row.querySelector('.task-start-date').value,
+                                due_date: row.querySelector('.task-due-date').value,
+                                estimate_time: parseFloat(row.querySelector('.task-estimate').value) || 0
+                            };
+                            allSubTasks.push(subTask);
+                        }
+                    } catch (error) {
+                        console.error('Lỗi khi lấy thông tin từ hàng:', index, error);
+                    }
+                });
+
+                // Cập nhật hidden input
+                selectedIndicesInput.value = JSON.stringify(selectedIndices);
+                
+                // Thêm dữ liệu sub-tasks vào form
+                const subTasksInput = document.createElement('input');
+                subTasksInput.type = 'hidden';
+                subTasksInput.name = 'sub_tasks';
+                subTasksInput.value = JSON.stringify(allSubTasks);
+                form.appendChild(subTasksInput);
+
+                // Submit form
+                form.submit();
+            });
+
+            // Khởi tạo giá trị mặc định cho selected_indices
+            const initialSelectedIndices = Array.from(subTaskCheckboxes)
+                .map((checkbox, index) => checkbox.checked ? index : null)
+                .filter(index => index !== null);
+            selectedIndicesInput.value = JSON.stringify(initialSelectedIndices);
+        });
+    </script>
+</body>
+</html>

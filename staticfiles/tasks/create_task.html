@@ -1,0 +1,51 @@
+<!-- tasks/templates/tasks/create_task.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Tasks from Redmine</title>
+</head>
+<body>
+    <h1>Nhập Link Task Redmine</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Lấy Thông Tin</button>
+    </form>
+
+    {% if task_info %}
+        <h2>Thông tin Task Cha</h2>
+        <ul>
+            <li><strong>Tracker:</strong> {{ task_info.tracker }}</li>
+            <li><strong>Summary:</strong> {{ task_info.summary }}</li>
+            <li><strong>Status:</strong> {{ task_info.status }}</li>
+            <li><strong>Priority:</strong> {{ task_info.priority }}</li>
+            <li><strong>Assignee:</strong> {{ task_info.assignee }}</li>
+            <li><strong>Target Version:</strong> {{ task_info.target_version }}</li>
+            <li><strong>Start Date:</strong> {{ task_info.start_date }}</li>
+            <li><strong>Due Date:</strong> {{ task_info.due_date }}</li>
+            <li><strong>Estimate Time:</strong> {{ task_info.estimate_time }}</li>
+        </ul>
+
+        <h2>Danh sách 7 Sub-Tasks</h2>
+        <ul>
+            {% for sub_task in sub_tasks %}
+                <li>
+                    <strong>Summary:</strong> {{ sub_task.summary }}<br>
+                    <strong>Tracker:</strong> {{ sub_task.tracker }}<br>
+                    <strong>Status:</strong> {{ sub_task.status }}<br>
+                    <strong>Priority:</strong> {{ sub_task.priority }}<br>
+                    <strong>Assignee:</strong> {{ sub_task.assignee }}<br>
+                    <strong>Target Version:</strong> {{ sub_task.target_version }}<br>
+                    <strong>Start Date:</strong> {{ sub_task.start_date }}<br>
+                    <strong>Due Date:</strong> {{ sub_task.due_date }}<br>
+                    <strong>Estimate Time:</strong> {{ sub_task.estimate_time }}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <form method="post" action="{% url 'create_sub_tasks' %}">
+            <button type="submit">Tạo Sub-Tasks</button>
+        </form>
+    {% endif %}
+</body>
+</html>
