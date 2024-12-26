@@ -1,9 +1,15 @@
 from redminelib import Redmine
 from django.conf import settings
+from .models import RedmineConfiguration
+
+
+def get_redmine_url():
+    """Get Redmine URL from database configuration"""
+    return get_config('REDMINE_URL', '')
 
 
 def get_task_info(task_id, api_key):
-    redmine = Redmine(settings.REDMINE_URL, key=api_key)
+    redmine = Redmine(get_redmine_url(), key=api_key)
     task = redmine.issue.get(task_id)
 
     # Trả về thông tin cần thiết từ task với xử lý các trường hợp không có thuộc tính
@@ -21,6 +27,7 @@ def get_task_info(task_id, api_key):
         'project_id': task.project.id if hasattr(task, 'project') else None
     }
 
+
 def create_sub_task_on_redmine(sub_task, api_key, project_id, task_id):
     """
     Tạo sub-task trên Redmine sử dụng Redmine API
@@ -35,7 +42,7 @@ def create_sub_task_on_redmine(sub_task, api_key, project_id, task_id):
         redminelib.resources.Issue: Đối tượng issue được tạo trên Redmine
     """
     # Khởi tạo kết nối Redmine
-    redmine = Redmine(settings.REDMINE_URL, key=api_key)
+    redmine = Redmine(get_redmine_url(), key=api_key)
     
     try:
         # Lấy các ID cần thiết từ Redmine
@@ -75,3 +82,49 @@ def create_sub_task_on_redmine(sub_task, api_key, project_id, task_id):
     except Exception as e:
         print(f"Error creating sub-task on Redmine: {str(e)}")
         raise e
+
+
+def get_config(key, default=None):
+    """Get configuration value from database"""
+    try:
+        config = RedmineConfiguration.objects.get(key=key)
+        return config.value
+    except RedmineConfiguration.DoesNotExist:
+        return default
+
+
+def get_prefix_task():
+    """Get prefix_task configuration from database"""
+    prefix_task = {}
+    for i in range(7):
+        key = f'PREFIX_TASK_{i}'
+        value = get_config(key)
+        if value:
+            prefix_task[i] = value
+    return prefix_task or {
+        0: '[Study]',
+        1: '[Q&A]', 
+        2: '[Coding]',
+        3: '[UT]',
+        4: '[Review]',
+        5: '[Fix bug]',
+        6: '[Release]'
+    }
+
+def get_prefix_tracker():
+    """Get prefix_tracker configuration from database"""
+    prefix_tracker = {}
+    for i in range(7):
+        key = f'PREFIX_TRACKER_{i}'
+        value = get_config(key)
+        if value:
+            prefix_tracker[i] = value
+    return prefix_tracker or {
+        0: 'Task',
+        1: 'Q&A',
+        2: 'Task', 
+        3: 'Task',
+        4: 'Task',
+        5: 'Task',
+        6: 'Task'
+    }

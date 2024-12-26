@@ -2,32 +2,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import TaskLinkForm
-from .utils import get_task_info, create_sub_task_on_redmine
+from .utils import get_task_info, create_sub_task_on_redmine, get_config, get_prefix_task, get_prefix_tracker
 from datetime import datetime
 import json
 from redminelib import Redmine
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-
-prefix_task = {
-    0: '[Study]',
-    1: '[Q&A]',
-    2: '[Coding]',
-    3: '[UT]',
-    4: '[Review]',
-    5: '[Fix bug]',
-    6: '[Release]',
-}
-prefix_tracker = {
-    0: 'Task',
-    1: 'Q&A',
-    2: 'Task',
-    3: 'Task',
-    4: 'Task',
-    5: 'Task',
-    6: 'Task',
-}
 
 
 def create_task(request):
@@ -39,11 +20,18 @@ def create_task(request):
             task_id = task_link.split('/')[-1]
 
             try:
+                # Lấy REDMINE_URL từ database
+                redmine_url = get_config('REDMINE_URL', 'http://localhost:3000')
+                
+                # Lấy prefix từ database
+                prefix_task = get_prefix_task()
+                prefix_tracker = get_prefix_tracker()
+                
                 # Lấy thông tin task từ Redmine với API key từ form
                 task_info = get_task_info(task_id, redmine_api_key)
                 
                 # Lấy các danh sách options từ Redmine
-                redmine = Redmine(settings.REDMINE_URL, key=redmine_api_key)
+                redmine = Redmine(redmine_url, key=redmine_api_key)
                 project_id = task_info['project_id']
                 
                 # Lấy danh sách trackers, statuses, priorities, users và versions của project
