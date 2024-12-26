@@ -129,5 +129,5 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-REDMINE_URL = 'http://localhost/redmine/'
+REDMINE_URL = 'https://rikkei.org/redmine/'
 
