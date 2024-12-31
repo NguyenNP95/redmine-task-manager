@@ -1,5 +1,6 @@
 from django.db import migrations
 
+
 def create_initial_config(apps, schema_editor):
     RedmineConfiguration = apps.get_model('tasks', 'RedmineConfiguration')
     

@@ -59,11 +59,11 @@ def create_task(request):
 
                 # Tạo danh sách 7 task con
                 sub_tasks = []
-                for i in range(7):
+                for i in range(len(prefix_task)):
                     sub_task = task_info.copy()
                     sub_task['summary'] = f"{prefix_task[i]}{task_info['summary']}"
                     sub_task['estimate_time'] = sub_task_estimate
-                    sub_task['tracker'] = prefix_tracker[i]
+                    sub_task['tracker'] = prefix_tracker[i] if i < len(prefix_tracker) else None
                     sub_tasks.append(sub_task)
 
                 # Lưu sub_tasks vào session
@@ -89,29 +89,33 @@ def create_task(request):
 
 
 # tasks/views.py (tiếp theo)
+@require_POST
 def create_sub_tasks(request):
-    if request.method == 'POST':
-        try:
-            # Lấy thông tin từ session
-            sub_tasks = json.loads(request.POST.get('sub_tasks', '[]'))  # Nhận sub_tasks từ form
-            api_key = request.session.get('redmine_api_key')
-            project_id = request.session.get('redmine_project_id')
-            task_id = request.session.get('task_id')
+    try:
+        # Lấy thông tin từ session
+        sub_tasks = json.loads(request.POST.get('sub_tasks', '[]'))  # Nhận sub_tasks từ form
+        api_key = request.session.get('redmine_api_key')
+        project_id = request.session.get('redmine_project_id')
+        task_id = request.session.get('task_id')
+        
+        for sub_task in sub_tasks:
+            # Chuyển đổi ngày nếu cần
+            if sub_task.get('start_date'):
+                sub_task['start_date'] = datetime.strptime(sub_task['start_date'], '%Y-%m-%d').date()
+            if sub_task.get('due_date'):
+                sub_task['due_date'] = datetime.strptime(sub_task['due_date'], '%Y-%m-%d').date()
             
-            for sub_task in sub_tasks:
-                # Chuyển đổi ngày nếu cần
-                if sub_task.get('start_date'):
-                    sub_task['start_date'] = datetime.strptime(sub_task['start_date'], '%Y-%m-%d').date()
-                if sub_task.get('due_date'):
-                    sub_task['due_date'] = datetime.strptime(sub_task['due_date'], '%Y-%m-%d').date()
-                
-                # Tạo sub-task trên Redmine
-                created_task = create_sub_task_on_redmine(sub_task, api_key, project_id, task_id)
+            # Tạo sub-task trên Redmine
+            created_task = create_sub_task_on_redmine(sub_task, api_key, project_id, task_id)
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Đã tạo thành công {len(sub_tasks)} sub-tasks!'
+        })
             
-            messages.success(request, f'Đã tạo thành công {len(sub_tasks)} sub-tasks!');
-            
-        except Exception as e:
-            messages.error(request, f'Lỗi khi tạo sub-tasks: {str(e)}');
-            
-    return redirect('create_task')
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Lỗi khi tạo sub-tasks: {str(e)}'
+        }, status=400)
 

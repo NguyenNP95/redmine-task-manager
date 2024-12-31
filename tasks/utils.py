@@ -70,10 +70,8 @@ def create_sub_task_on_redmine(sub_task, api_key, project_id, task_id):
         if sub_task.get('assignee_id'):
             issue_data['assigned_to_id'] = sub_task.get('assignee_id')
 
-        if sub_task.get('target_version'):
-            versions = list(redmine.version.filter(project_id=project_id, name=sub_task['target_version']))
-            if versions:
-                issue_data['fixed_version_id'] = versions[0].id
+        if sub_task.get('target_version_id'):
+            issue_data['fixed_version_id'] = sub_task.get('target_version_id')
 
         # Tạo issue mới trên Redmine
         issue = redmine.issue.create(**issue_data)
@@ -96,7 +94,7 @@ def get_config(key, default=None):
 def get_prefix_task():
     """Get prefix_task configuration from database"""
     prefix_task = {}
-    for i in range(7):
+    for i in range(20):
         key = f'PREFIX_TASK_{i}'
         value = get_config(key)
         if value:
@@ -114,7 +112,7 @@ def get_prefix_task():
 def get_prefix_tracker():
     """Get prefix_tracker configuration from database"""
     prefix_tracker = {}
-    for i in range(7):
+    for i in range(20):
         key = f'PREFIX_TRACKER_{i}'
         value = get_config(key)
         if value:

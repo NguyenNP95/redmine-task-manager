@@ -194,7 +194,7 @@
         <!-- Phần danh sách sub-tasks -->
         <div class="row">
             <div class="col s12">
-                <h4 class="center-align">Danh sách 7 Sub-Tasks</h4>
+                <h4 class="center-align">Danh sách {{ sub_tasks|length }} Sub-Tasks</h4>
                 <div class="sub-tasks-table">
                     <table class="striped highlight responsive-table" id="sub-tasks-table">
                         <thead>
@@ -296,7 +296,7 @@
                     <form method="post" action="{% url 'create_sub_tasks' %}" id="create-subtasks-form">
                         {% csrf_token %}
                         <input type="hidden" name="selected_indices" id="selected-indices" value="">
-                        <button class="btn-large waves-effect waves-light" type="submit">
+                        <button class="btn-large waves-effect waves-light" type="submit" id="create-subtasks-btn">
                             Tạo Sub-Tasks
                             <i class="material-icons right">add_circle</i>
                         </button>
@@ -353,12 +353,13 @@
                 });
             });
 
-            // Hàm cập nhật dữ liệu sub-task khi có thay đổi
-
-
-            // Cập nhật dữ liệu khi submit form
-            form.addEventListener('submit', function(e) {
+            // Thay đổi phần xử lý submit form
+            form.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                
+                const submitButton = document.getElementById('create-subtasks-btn');
+                submitButton.disabled = true;
+                submitButton.textContent = 'Đang xử lý...';
                 
                 // Lấy danh sách các task được chọn
                 const selectedIndices = Array.from(subTaskCheckboxes)
@@ -367,6 +368,8 @@
                 
                 if (selectedIndices.length === 0) {
                     alert('Vui lòng chọn ít nhất một sub-task để tạo.');
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Tạo Sub-Tasks <i class="material-icons right">add_circle</i>';
                     return;
                 }
 
@@ -375,18 +378,19 @@
                 document.querySelectorAll('#sub-tasks-table tbody tr').forEach((row, index) => {
                     try {
                         const checkbox = row.querySelector('.sub-task-checkbox');
-                        if (checkbox && checkbox.checked) { // Chỉ lấy thông tin từ hàng có checkbox được chọn
+                        if (checkbox && checkbox.checked) {
                             const subTask = {
                                 summary: row.querySelector('.task-summary').value,
                                 tracker: row.querySelector('.task-tracker option:checked').text,
-                                tracker_id: row.querySelector('.task-tracker option:checked').value, // Thêm tracker_id
+                                tracker_id: row.querySelector('.task-tracker option:checked').value,
                                 status: row.querySelector('.task-status option:checked').text,
-                                status_id: row.querySelector('.task-status option:checked').value, // Thêm status_id
+                                status_id: row.querySelector('.task-status option:checked').value,
                                 priority: row.querySelector('.task-priority option:checked').text,
-                                priority_id: row.querySelector('.task-priority option:checked').value, // Thêm priority_id
+                                priority_id: row.querySelector('.task-priority option:checked').value,
                                 assignee: row.querySelector('.task-assignee option:checked').text,
-                                assignee_id: row.querySelector('.task-assignee option:checked').value, // Thêm member_id
+                                assignee_id: row.querySelector('.task-assignee option:checked').value,
                                 target_version: row.querySelector('.task-version option:checked').text,
+                                target_version_id: row.querySelector('.task-version option:checked').value,
                                 start_date: row.querySelector('.task-start-date').value,
                                 due_date: row.querySelector('.task-due-date').value,
                                 estimate_time: parseFloat(row.querySelector('.task-estimate').value) || 0
@@ -398,19 +402,66 @@
                     }
                 });
 
-                // Cập nhật hidden input
-                selectedIndicesInput.value = JSON.stringify(selectedIndices);
-                
-                // Thêm dữ liệu sub-tasks vào form
-                const subTasksInput = document.createElement('input');
-                subTasksInput.type = 'hidden';
-                subTasksInput.name = 'sub_tasks';
-                subTasksInput.value = JSON.stringify(allSubTasks);
-                form.appendChild(subTasksInput);
+                // Chuẩn bị dữ liệu để gửi
+                const formData = new FormData();
+                formData.append('selected_indices', JSON.stringify(selectedIndices));
+                formData.append('sub_tasks', JSON.stringify(allSubTasks));
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
 
-                // Submit form
-                form.submit();
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                         const messagesDiv = document.querySelector('.messages') || createMessagesDiv();
+                        messagesDiv.innerHTML = `
+                            <div class="card-panel success">
+                                <span class="white-text">${data.message || 'Thành công'}</span>
+                            </div>
+                        `;
+                        // Scroll to error message
+                        messagesDiv.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        // Nếu có lỗi, hiển thị thông báo lỗi
+                        const messagesDiv = document.querySelector('.messages') || createMessagesDiv();
+                        messagesDiv.innerHTML = `
+                            <div class="card-panel error">
+                                <span class="white-text">${data.error || 'Có lỗi xảy ra khi tạo sub-tasks'}</span>
+                            </div>
+                        `;
+                        // Scroll to error message
+                        messagesDiv.scrollIntoView({ behavior: 'smooth' });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    const messagesDiv = document.querySelector('.messages') || createMessagesDiv();
+                    messagesDiv.innerHTML = `
+                        <div class="card-panel error">
+                            <span class="white-text">Có lỗi xảy ra khi kết nối với server</span>
+                        </div>
+                    `;
+                    messagesDiv.scrollIntoView({ behavior: 'smooth' });
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Tạo Sub-Tasks <i class="material-icons right">add_circle</i>';
+                }
             });
+
+            // Helper function to create messages div if it doesn't exist
+            function createMessagesDiv() {
+                const messagesDiv = document.createElement('div');
+                messagesDiv.className = 'messages';
+                const container = document.querySelector('.container');
+                container.insertBefore(messagesDiv, container.firstChild);
+                return messagesDiv;
+            }
 
             // Khởi tạo giá trị mặc định cho selected_indices
             const initialSelectedIndices = Array.from(subTaskCheckboxes)
