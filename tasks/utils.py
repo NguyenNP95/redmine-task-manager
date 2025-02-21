@@ -126,3 +126,53 @@ def get_prefix_tracker():
         5: 'Task',
         6: 'Task'
     }
+
+
+from datetime import datetime, timedelta
+
+
+def is_weekend(date):
+    return date.weekday() >= 5
+
+
+def count_workdays(start_date, end_date):
+    days = 0
+    current = start_date
+    while current <= end_date:
+        if not is_weekend(current):
+            days += 1
+        current += timedelta(days=1)
+    return days
+
+
+def calculate_done_percent(start_date, due_date, today):
+    if not all([start_date, due_date, today]):
+        return 0
+
+    total_days = count_workdays(start_date, due_date)
+    elapsed_days = count_workdays(start_date, today)
+
+    if total_days == 0:
+        return 0
+
+    raw_percent = (elapsed_days / total_days) * 100
+    # Round to nearest 10%
+    return round(raw_percent / 10) * 10
+
+
+def get_status_id_by_name(redmine, status_name):
+    """Get status ID by name from Redmine"""
+    statuses = list(redmine.issue_status.all())
+    for status in statuses:
+        if status.name == status_name:
+            return status.id
+    return None
+
+
+def get_redmine_statuses(redmine):
+    """Get all required status IDs"""
+    return {
+        'new': get_status_id_by_name(redmine, 'New'),
+        'in_progress': get_status_id_by_name(redmine, 'In Progress'),
+        'closed': get_status_id_by_name(redmine, 'Closed')
+    }
